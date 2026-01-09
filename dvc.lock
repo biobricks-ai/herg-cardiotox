@@ -1,2 +1,34 @@
 schema: '2.0'
-stages: {}
+stages:
+  download:
+    cmd: bash stages/01_download.sh
+    deps:
+    - path: stages/01_download.sh
+      hash: md5
+      md5: 2bac130751179dab1517981dd21aab46
+      size: 1620
+      isexec: true
+    outs:
+    - path: download
+      hash: md5
+      md5: 7a0b584cac2c45fd97a61c3b7f29e9de.dir
+      size: 216581978
+      nfiles: 5
+  build:
+    cmd: .venv/bin/python stages/02_build.py
+    deps:
+    - path: download
+      hash: md5
+      md5: 7a0b584cac2c45fd97a61c3b7f29e9de.dir
+      size: 216581978
+      nfiles: 5
+    - path: stages/02_build.py
+      hash: md5
+      md5: 8ff35f9c021d42bf5d33bb6e190bba14
+      size: 3745
+    outs:
+    - path: brick
+      hash: md5
+      md5: 03c6d9dfa375d09d80cfd74e08c55c36.dir
+      size: 68549866
+      nfiles: 5

@@ -1,36 +1,45 @@
 #!/usr/bin/env bash
 
-# Script to download files
+# Script to download hERG cardiotoxicity datasets
+# Sources: CardioTox and hERG-QSAR GitHub repositories
+# Contains hERG channel blocker/non-blocker classifications with SMILES
 
-# Get local path
+set -euo pipefail
+
 localpath=$(pwd)
-echo "Local path: $localpath"
+downloadpath="$localpath/download"
 
-# Create the list directory to save list of remote files and directories
-listpath="$localpath/list"
-echo "List path: $listpath"
-mkdir -p $listpath
-cd $listpath;
-
-# Define the FTP base address
-export ftpbase=""
-
-# Retrieve the list of files to download from FTP base address
-wget --no-remove-listing $ftpbase
-cat index.html | grep -Po '(?<=href=")[^"]*' | sort | cut -d "/" -f 10 > files.txt
-rm .listing
-rm index.html
-
-# Create the download directory
-export downloadpath="$localpath/download"
-echo "Download path: $downloadpath"
 mkdir -p "$downloadpath"
-cd $downloadpath;
 
-# Download files in parallel
-cat $listpath/files.txt | xargs -P14 -n1 bash -c '
-  echo $0
-  wget -nH -q -nc -P $downloadpath $ftpbase$0
-'
+echo "Downloading hERG cardiotoxicity datasets..."
 
-echo "Download done."
+# hERG-QSAR dataset from ChEMBL (curated)
+echo "Downloading hERG-QSAR datasets..."
+wget -nv -O "$downloadpath/Training_Set.csv" \
+    "https://raw.githubusercontent.com/PDelre93/hERG-QSAR/main/Training_Set.csv" || \
+    echo "Warning: Could not download Training_Set.csv"
+
+wget -nv -O "$downloadpath/Validation_Set.csv" \
+    "https://raw.githubusercontent.com/PDelre93/hERG-QSAR/main/Validation_Set.csv" || \
+    echo "Warning: Could not download Validation_Set.csv"
+
+wget -nv -O "$downloadpath/External_set.csv" \
+    "https://raw.githubusercontent.com/PDelre93/hERG-QSAR/main/External_set.csv" || \
+    echo "Warning: Could not download External_set.csv"
+
+# CardioTox dataset (larger, from BindingDB and ChEMBL)
+echo "Downloading CardioTox dataset..."
+wget -nv -O "$downloadpath/cardiotox_data.tar.xz" \
+    "https://github.com/Abdulk084/CardioTox/raw/master/data/train_validation_cardio_tox_data.tar.xz" || \
+    echo "Warning: Could not download CardioTox data"
+
+# Extract CardioTox data
+if [[ -f "$downloadpath/cardiotox_data.tar.xz" ]]; then
+    echo "Extracting CardioTox data..."
+    cd "$downloadpath"
+    tar -xf cardiotox_data.tar.xz || echo "Warning: Could not extract CardioTox data"
+    cd "$localpath"
+fi
+
+echo "Download complete."
+ls -lh "$downloadpath"
